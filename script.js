@@ -297,6 +297,8 @@ document.querySelectorAll('.sheet.lux').forEach(sec=>{['tl','tr','bl','br'].forE
   const conf=$('confetti'),cc=conf.getContext('2d');let bits=[],confRun=false;
   function paintFoil(cv){
     const d=Math.min(2,devicePixelRatio||1),w=cv.offsetWidth,h=cv.offsetHeight;
+    if(!w||!h)return; // no size yet: the observer below paints it once the page is laid out
+    cv.dataset.painted='1';
     cv.width=w*d;cv.height=h*d;const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);
     const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,'#A77A3C');g.addColorStop(.3,'#F6DFA8');g.addColorStop(.5,'#C4974F');g.addColorStop(.72,'#F3D9A4');g.addColorStop(1,'#93652B');
     x.fillStyle=g;x.fillRect(0,0,w,h);
@@ -340,6 +342,8 @@ document.querySelectorAll('.sheet.lux').forEach(sec=>{['tl','tr','bl','br'].forE
   $('revealAll').addEventListener('click',()=>cards.forEach((c,i)=>setTimeout(()=>clearCard(c),i*250)));
   // repaint foil after fonts load so the label uses the right typeface
   if(document.fonts)document.fonts.ready.then(()=>cards.forEach(c=>{if(!c.classList.contains('cleared'))paintFoil(c.querySelector('canvas'));}));
+  // if the page loaded before it had a size, paint each foil as soon as it gets one
+  if('ResizeObserver' in window)cards.forEach(c=>{const cv=c.querySelector('canvas');new ResizeObserver((_,o)=>{if(!cv.offsetWidth)return;if(!cv.dataset.painted)paintFoil(cv);o.disconnect();}).observe(cv);});
 })();
 
 /* ---------- torn paper edges ---------- */
